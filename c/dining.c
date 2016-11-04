@@ -9,34 +9,30 @@
 #define WAIT_TIME_MAX 3
 #define WAIT_TIME_MIN 1
 
-struct philosophers {
-	unsigned int id;
-	pthread_t thread;
-	unsigned int left_stick;
-	unsigned int right_stick;
-};
-
-void pickup_chopsticks(int philosopher_id){
-	
-}
-
-void release_chopsticks(int philosopher_id){
-
-}
+pthread_t philosophers[NUM_PHILOSOPHERS];
+pthread_mutex_t forks[NUM_PHILOSOPHERS];
 
 void * run(void * arguments){
-	sleep(rand() % (WAIT_TIME_MAX - WAIT_TIME_MIN) + WAIT_TIME_MIN);
+	sleep(rand() % WAIT_TIME_MAX + WAIT_TIME_MIN);
 	int argument = *((int *) arguments);
-	printf("Philosopher #%u\n", argument);
-	
+	//printf("Philosopher #%u\n", argument);
+	int result;
+	int a = 50;
 	// Pick the lowest chopstick available
+//	while(1){
+		pthread_mutex_lock(&forks[(argument + 1) % NUM_PHILOSOPHERS]);
+		pthread_mutex_lock(&forks[argument]);
+		printf("Philosopher %u has chopsticks %u and %u\n", argument, argument, (argument + 1) % NUM_PHILOSOPHERS);
+		sleep(rand() % WAIT_TIME_MAX + WAIT_TIME_MIN);
+		//pthread_mutex_unlock(&forks[argument]);
+		pthread_mutex_unlock(&forks[(argument + 1) % NUM_PHILOSOPHERS]);
+		pthread_mutex_unlock(&forks[argument]);
+		printf("Philosopher %u has put down chopsticks %u and %u\n", argument, argument, (argument + 1) % NUM_PHILOSOPHERS);
+//	}
 	// Pickup chopstick. Wait for available chopstick for other hand.
 	// eat
 	// release chopstick
 }
-
-struct philosophers philosophers[NUM_PHILOSOPHERS];
-bool forks[NUM_PHILOSOPHERS];
 
 int main(int argc, char * argv[]){
 
@@ -47,12 +43,16 @@ int main(int argc, char * argv[]){
 	int result;
 
 	for(index = 0; index < NUM_PHILOSOPHERS; index++){
+		pthread_mutex_init(&forks[index], NULL);
+	}
+	
+	for(index = 0; index < NUM_PHILOSOPHERS; index++){
 		arguments[index] = index;
-		result = pthread_create(&philosophers[index].thread, NULL, run, &arguments[index]);		
+		result = pthread_create(&philosophers[index], NULL, run, &arguments[index]);		
 	}
 
 	for(index = 0; index < NUM_PHILOSOPHERS; index++){
-		result = pthread_join(philosophers[index].thread, NULL);
+		result = pthread_join(philosophers[index], NULL);
 	}
 	return 0;	
 }
